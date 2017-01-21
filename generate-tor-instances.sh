@@ -1,4 +1,17 @@
 #!/bin/bash
+startAllInstances(){
+	for i in $(ls /etc/tor/torrc*); do  
+		proc=$(ps aux | grep -v grep | grep $i)
+		if [ -z "$proc" ]; then 
+			tor -f $i &
+		fi 	
+	done
+}
+
+killInstances() {
+	killall tor
+}
+
 getAllRunning() {
 	runList=$(ps aux | grep -v grep | grep torrc. | awk {'print $13'})
 	for i in $(echo -e "$runList"); do
@@ -57,7 +70,9 @@ $0 [options]
 	-r |--running	displays the host:port of the current socks tor proxies
 					$0 --running
 	-g | --generate	generates X number of new tor instances 
-					$0 --generate=5 
+					$0 --generate=5
+	-k | --kill     killall tor 
+	-s | --start    starts all instances
 helpcontent
 exit 1
 }
@@ -73,6 +88,14 @@ argParse() {
     		generateNumber="${i#*=}"
     		shift # past argument=value
     		;;
+		-s|--start)
+    		startvar=true
+    		shift # past argument=value
+    		;;
+ 		-k|--kill)
+    		kill=true
+    		shift # past argument=value
+    		;;   
     	-h|--help)
     		help=true
     		shift # past argument with no value
@@ -84,6 +107,8 @@ argParse() {
 	done
 	if [ "$help" == true ]; then displayHelp; fi
 	if [ "$run" == true ]; then getAllRunning; fi
+	if [ "$startvar" == true ]; then startAllInstances; fi
+	if [ "$kill" == true ]; then killInstances; fi
 	if [ -n "$generateNumber" ]; then startGeneration $generateNumber; fi
 }
 
